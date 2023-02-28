@@ -37,30 +37,38 @@ void execute()
 {
 	for (int i = 0; i < g_i.map_height * g_i.map_width; ++i)
 	{
-		// x = i / map_width , y = i % map_width
-		int check = check_location(i / g_i.map_width,  i % g_i.map_width);
+		// x = i % map_width , y = i / map_width
+		int check = check_location(i % g_i.map_width,  i / g_i.map_width);
 		if (check == 1 || (g_i.is_fill == 'R' && check == 2))
 			*(g_i.result + i) = g_i.draw_char;
 	}
 }
 
+int error_op()
+{
+	char *error_op = "Error: Operation file corrupted\n";
+	write(1, error_op, ft_strlen(error_op));
+	return 1;
+}
+
 int main(int ac, char **av) {
 	FILE *f;
 	char *error_arg = "Error: argument\n";
-	char *error_op = "Error: Operation file corrupted\n";
+	int scan_ret;
 
 	if (ac != 2) {
 		write(1, error_arg, ft_strlen(error_arg));
 		return (1);
 	}
 	f = fopen(*(av + 1), "r");
-	if (!f
-		|| fscanf(f, "%d %d %c\n", &g_i.map_width, &g_i.map_height, &g_i.background) != 3
-		|| fscanf(f, "%c %f %f %f %f %c\n", &g_i.is_fill, &g_i.ltX, &g_i.ltY, &g_i.width, &g_i.height, &g_i.draw_char) != 6
-			) {
-		write(1, error_op, ft_strlen(error_op));
-		return (1);
-	}
+	if (!f)
+		return (error_op());
+	scan_ret = fscanf(f, "%d %d %c\n", &g_i.map_width, &g_i.map_height, &g_i.background);
+	if (scan_ret != 3)
+		return (error_op());
+	scan_ret = fscanf(f, "%c %f %f %f %f %c\n", &g_i.is_fill, &g_i.ltX, &g_i.ltY, &g_i.width, &g_i.height, &g_i.draw_char);
+	if (scan_ret != 6)
+		return (error_op());
 
 	// init background
 	g_i.result = (char *) malloc(g_i.map_height * g_i.map_width * sizeof(char));
@@ -69,8 +77,14 @@ int main(int ac, char **av) {
 
 	execute();
 
-	while (fscanf(f, "%c %f %f %f %f %c\n", &g_i.is_fill, &g_i.ltX, &g_i.ltY, &g_i.width, &g_i.height, &g_i.draw_char) == 6)
+	scan_ret = fscanf(f, "%c %f %f %f %f %c\n", &g_i.is_fill, &g_i.ltX, &g_i.ltY, &g_i.width, &g_i.height, &g_i.draw_char);
+	while (scan_ret == 6)
+	{
 		execute();
+		scan_ret = fscanf(f, "%c %f %f %f %f %c\n", &g_i.is_fill, &g_i.ltX, &g_i.ltY, &g_i.width, &g_i.height, &g_i.draw_char);
+	}
+	if (scan_ret != -1)
+		return error_op();
 	fclose(f);
 	for (int i = 0; i < g_i.map_height * g_i.map_width; ++i)
 	{
