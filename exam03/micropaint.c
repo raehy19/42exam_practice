@@ -66,20 +66,22 @@ int main(int ac, char **av) {
 	scan_ret = fscanf(f, "%d %d %c\n", &g_i.map_width, &g_i.map_height, &g_i.background);
 	if (scan_ret != 3)
 		return (error_op());
-	scan_ret = fscanf(f, "%c %f %f %f %f %c\n", &g_i.is_fill, &g_i.ltX, &g_i.ltY, &g_i.width, &g_i.height, &g_i.draw_char);
-	if (scan_ret != 6)
-		return (error_op());
+	if (g_i.map_width < 1 || g_i.map_height < 1 || g_i.map_width  > 300 || g_i.map_height >300  )
+		return error_op();
+
 
 	// init background
 	g_i.result = (char *) malloc(g_i.map_height * g_i.map_width * sizeof(char));
+	if (!g_i.result)
+		return error_op();
 	for (int i = 0; i < g_i.map_height * g_i.map_width; ++i)
 		*(g_i.result + i) = g_i.background;
-
-	execute();
 
 	scan_ret = fscanf(f, "%c %f %f %f %f %c\n", &g_i.is_fill, &g_i.ltX, &g_i.ltY, &g_i.width, &g_i.height, &g_i.draw_char);
 	while (scan_ret == 6)
 	{
+		if ((g_i.is_fill != 'R' && g_i.is_fill != 'r' ) || g_i.width <= 0.0 || g_i.height <= 0.0)
+			return error_op();
 		execute();
 		scan_ret = fscanf(f, "%c %f %f %f %f %c\n", &g_i.is_fill, &g_i.ltX, &g_i.ltY, &g_i.width, &g_i.height, &g_i.draw_char);
 	}
@@ -92,6 +94,7 @@ int main(int ac, char **av) {
 			write(1, "\n", 1);
 		write(1, (g_i.result + i), 1);
 	}
+	write(1, "\n", 1);
 	free(g_i.result);
 	return 0;
 }
